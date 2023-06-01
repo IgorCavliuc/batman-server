@@ -17,7 +17,7 @@ let db;
 
 app.use(
   cors({
-    origin: "http://localhost:3001",
+    origin: "https://batman-server-b1j6mxocw-igorcavliuc.vercel.app/",
   })
 );
 connectToDb((err) => {

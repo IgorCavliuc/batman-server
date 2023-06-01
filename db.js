@@ -1,6 +1,6 @@
 const { MongoClient } = require("mongodb");
 
-const URL = "mongodb://localhost:27017/Batman";
+const URL = "https://batman-server-b1j6mxocw-igorcavliuc.vercel.app/";
 let dbConnection;
 
 module.exports = {
