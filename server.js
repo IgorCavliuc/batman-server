@@ -17,7 +17,7 @@ let db;
 
 app.use(
   cors({
-    origin: "https://batman-server-b1j6mxocw-igorcavliuc.vercel.app/",
+    origin: "http://localhost:3001",
   })
 );
 connectToDb((err) => {
@@ -43,6 +43,7 @@ app.get("/navigation", (req, res) => {
     .sort({ title: 1 })
     .forEach((nav) => navigation.push(nav))
     .then(() => {
+      console.log(navigation)
       res.status(200).json(navigation);
     })
     .catch(() => handleError(res, "Something goes wrong..."));
@@ -54,6 +55,8 @@ app.get("/products", async (req, res) => {
       .collection("products")
       .find({ category: req.query.subcategory })
       .toArray();
+
+    console.log(filteredProducts)
 
     res.status(200).json(filteredProducts);
   } catch (error) {
