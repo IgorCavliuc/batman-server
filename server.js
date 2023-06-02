@@ -20,7 +20,7 @@ let db;
 
 app.use(
   cors({
-    origin: "https://batman-client.vercel.app/",
+    origin: "https://batman-server.vercel.app/",
   })
 );
 connectToDb((err) => {
