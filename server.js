@@ -38,17 +38,13 @@ const handleError = (res, error) => {
   res.status(500).json({ error });
 };
 
-app.get("/navigation", (req, res) => {
-  db.collection("navigation")
+app.get("/navigation", async(req, res) => {
+  const navigation = await db.collection("navigation")
       .find()
-      .sort({ title: 1 })
-      .toArray((err, navigation) => {
-        if (err) {
-          handleError(res, "Something went wrong...");
-        } else {
-          res.status(200).json(navigation);
-        }
-      });
+      .sort()
+      .toArray();
+
+  res.status(200).json(navigation);
 });
 
 app.get("/products", async (req, res) => {
