@@ -5,7 +5,7 @@ const cors = require("cors");
 const cookieSession = require("cookie-session");
 const bodyParser = require("body-parser");
 
-const PORT = process.env.PORT;
+const PORT = 3000;
 
 const app = express();
 app.use(express.json());
