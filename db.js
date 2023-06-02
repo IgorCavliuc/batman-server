@@ -1,11 +1,11 @@
 const { MongoClient } = require("mongodb");
 
-const URL = "https://batman-server-b1j6mxocw-igorcavliuc.vercel.app/";
+const URL = "mongodb+srv://cavliucserv:zXSCKfTxa1YGFVnu@database.uppj1fv.mongodb.net/productsData?retryWrites=true&w=majority";
 let dbConnection;
 
 module.exports = {
   connectToDb: (cb) => {
-    MongoClient.connect(URL)
+    MongoClient.connect(URL, {useNewUrlParser: true, useUnifiedTopology:true})
       .then((client) => {
         console.log("Connected to MongoDB");
         dbConnection = client.db();
@@ -17,3 +17,6 @@ module.exports = {
   },
   getDb: () => dbConnection,
 };
+
+
+
