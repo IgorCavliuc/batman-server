@@ -17,7 +17,7 @@ let db;
 
 app.use(
     cors({
-      origin: "https://batman-client.vercel.app", // Обновленный URL вашего клиентского приложения
+      origin: "https://batman-client.vercel.app"  || "http://localhost:3001", // Обновленный URL вашего клиентского приложения
       methods: ["GET", "POST"], // Разрешенные HTTP-методы
       allowedHeaders: ["Content-Type"], // Разрешенные заголовки
     })
