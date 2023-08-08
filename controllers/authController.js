@@ -4,7 +4,7 @@ const User = require('../models/User');
 
 exports.registerUser = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { login, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = new User({ username, password: hashedPassword });
         await user.save();
@@ -15,12 +15,9 @@ exports.registerUser = async (req, res) => {
 };
 
 exports.loginUser = async (req, res) => {
-    console.log("324232432432324232432432324232432432")
-
-console.log(req)
     try {
-        const { username, password } = req.body;
-        const user = await User.findOne({ username });
+        const { login, password } = req.body;
+        const user = await User.findOne({ login });
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }

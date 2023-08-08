@@ -10,12 +10,12 @@ const jwt = require("jsonwebtoken");
 const PORT = 3001;
 
 const app = express();
-
-app.use(cors({
-  origin: "http://localhost:3001",
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type"],
-}));
+app.use(cors());
+// app.use(cors({
+//   origin: "http://localhost:3001",
+//   methods: ["GET", "POST"],
+//   allowedHeaders: ["Content-Type"],
+// }));
 
 app.use(express.json());
 app.use(bodyParser.json({ limit: "40mb" }));
@@ -47,7 +47,7 @@ app.get("/navigation", async (req, res) => {
   }
 });
 
-app.get('/api/login', loginUser);
+app.post('/api/login', loginUser);
 app.post('/api/register', registerUser);
 
 app.get("/products", async (req, res) => {
