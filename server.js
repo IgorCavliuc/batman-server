@@ -2,11 +2,11 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const { connectToDb, getDb } = require("./db");
-const { loginUser, registerUser } = require('./controllers/authController');
-const User = require("./models/User");
-const bcrypt = require("bcrypt");
+const {  registerUser } = require('./controllers/authController');
 const jwt = require("jsonwebtoken");
-
+const bcrypt = require('bcrypt');
+const { ObjectId } = require('mongodb');
+const saltRounds = 10;
 const PORT = 3001;
 
 const app = express();
@@ -47,7 +47,37 @@ app.get("/navigation", async (req, res) => {
   }
 });
 
-app.post('/api/login', loginUser);
+app.post('/api/login', async (req, res) => {
+  try {
+    const { login, password } = req.body;
+
+    const usersCollection = db.collection("users");
+    const user = await usersCollection.findOne({ login: login });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    // const passwordMatch = password === user.password
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
+    res.json({ app_code:"ACCESS_TOKEN", token, data:{
+        name: user?.name ?? '',
+        img: user?.img ?? '',
+        lastname: user?.lastName ?? '',
+        email: user?.email ?? '',
+        login: user?.login ?? '',
+        data_birthday: user?.data_birthday ?? '',
+        root: user?.root ?? '',
+        position: user?.position ?? '',
+      }});
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
 app.post('/api/register', registerUser);
 
 app.get("/products", async (req, res) => {
@@ -58,6 +88,27 @@ app.get("/products", async (req, res) => {
     handleError(res, "Something went wrong...");
   }
 });
+app.get('/product/:productId', async (req, res) => {
+  const productId = req.params.productId;
+
+  try {
+    const objectId = new ObjectId(productId);
+
+    console.log({ _id: objectId })
+    const product = await db.collection('products').findOne({ _id: objectId });
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.status(200).json({app_code:"GETING_DATA", data:product});
+  } catch (error) {
+    res.status(500).json({ message: 'An error occurred while fetching the product' });
+  }
+});
+
+
+
 
 app.get("/users", async (req, res) => {
   try {
@@ -67,6 +118,31 @@ app.get("/users", async (req, res) => {
     handleError(res, "Something went wrong...");
   }
 });
+
+app.post("/create-user", async (req, res) => {
+  try {
+    const user = req.body;
+
+    // Хэширование пароля
+    const hashedPassword = await bcrypt.hash(user.password, saltRounds);
+
+    // Заменяем исходный пароль на хэшированный
+    user.password = hashedPassword;
+
+    const createdUser = await db.collection("users").insertOne(user);
+    const responseData = {
+      message: "User created successfully",
+      app_code: "SUCCESSFULLY",
+      // data: createdUser.ops[0],
+    };
+    res.status(200).json(responseData);
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred while creating the user" });
+  }
+});
+
+
+
 
 app.get("/categories", async (req, res) => {
   try {
@@ -84,10 +160,10 @@ app.post("/create-post", async (req, res) => {
     const responseData = {
       message: "Product created successfully",
       app_code: "SUCCESSFULLY",
-      data: createdProduct.ops[0],
+      // data: createdProduct.ops[0],
     };
     res.status(200).json(responseData);
   } catch (error) {
-    handleError(res, "Something went wrong...");
+    res.status(500).json({ error: "An error occurred while creating the product" });
   }
 });
