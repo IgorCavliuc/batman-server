@@ -1,28 +1,32 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cors = require("cors");
-const { connectToDb, getDb } = require("./db");
+
 const { registerUser } = require('./controllers/authController');
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb');
 const saltRounds = 10;
-const PORT = 3001;
+const { connectToDb, getDb } = require("./db");
+const cors = require("cors");
+const cookieSession = require("cookie-session");
+
+const PORT = 3000;
 
 const app = express();
-
-// Используйте CORS с настройками для вашего сервера
-app.use(cors({
-  origin: "https://batman-client.vercel.app",
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type"],
-}));
-
 app.use(express.json());
+
 app.use(bodyParser.json({ limit: "40mb" }));
 app.use(bodyParser.urlencoded({ limit: "40mb", extended: true }));
 
 let db;
+
+app.use(
+    cors({
+      origin: "http://localhost:3001",
+      methods: ["GET", "POST"],
+      allowedHeaders: ["Content-Type"],
+    })
+);
 
 connectToDb((err) => {
   if (!err) {
