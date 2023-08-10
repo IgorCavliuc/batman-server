@@ -11,11 +11,11 @@ const PORT = 3001;
 
 const app = express();
 app.use(cors());
-// app.use(cors({
-//   origin: "http://localhost:3001",
-//   methods: ["GET", "POST"],
-//   allowedHeaders: ["Content-Type"],
-// }));
+app.use(cors({
+  origin: "http://localhost:3001",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"],
+}));
 
 app.use(express.json());
 app.use(bodyParser.json({ limit: "40mb" }));
