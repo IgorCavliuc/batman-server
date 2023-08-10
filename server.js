@@ -10,7 +10,7 @@ const { connectToDb, getDb } = require("./db");
 const cors = require("cors");
 const cookieSession = require("cookie-session");
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 app.use(express.json());
@@ -22,9 +22,10 @@ let db;
 
 app.use(
     cors({
-      origin: "http://localhost:3000",
+      origin: ["http://localhost:3001", "https://batman-server.vercel.app/api/login"],
       methods: ["GET", "POST"],
       allowedHeaders: ["Content-Type"],
+      credentials: true
     })
 );
 
