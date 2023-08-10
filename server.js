@@ -28,6 +28,10 @@ app.use(
       credentials: true
     })
 );
+app.use((req, res, next) => {
+  res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade');
+  next();
+});
 
 connectToDb((err) => {
   if (!err) {
