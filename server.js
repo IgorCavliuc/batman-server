@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const { connectToDb, getDb } = require("./db");
-const {  registerUser } = require('./controllers/authController');
+const { registerUser } = require('./controllers/authController');
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb');
@@ -10,9 +10,10 @@ const saltRounds = 10;
 const PORT = 3001;
 
 const app = express();
-app.use(cors());
+
+// Используйте CORS с настройками для вашего сервера
 app.use(cors({
-  origin: "http://localhost:3001",
+  origin: "https://batman-client.vercel.app",
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"],
 }));
