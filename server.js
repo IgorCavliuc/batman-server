@@ -22,7 +22,7 @@ let db;
 
 app.use(
     cors({
-      origin: ["http://localhost:3001", "https://batman-server.vercel.app"],
+      origin: ["http://localhost:3001", "https://batman-client.vercel.app"],
       methods: ["GET", "POST"],
       allowedHeaders: ["Content-Type"],
       credentials: true
@@ -71,7 +71,7 @@ app.post('/api/login', async (req, res) => {
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-
+    res.setHeader('Referrer-Policy', 'same-origin');
     const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
     res.json({ app_code:"ACCESS_TOKEN", token, data:{
         name: user?.name ?? '',
