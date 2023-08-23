@@ -22,7 +22,7 @@ let db;
 
 app.use(
     cors({
-      origin: ["http://localhost:3001", "https://batman.vercel.app", "https://devel-batman.vercel.app"],
+      origin: ["http://localhost:3001", "https://batman-client.vercel.app", "https://devel-batman.vercel.app"],
       methods: ["GET", "POST"],
       allowedHeaders: ["Content-Type"],
       credentials: true
