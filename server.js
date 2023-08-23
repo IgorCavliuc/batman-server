@@ -22,7 +22,7 @@ let db;
 
 app.use(
     cors({
-      origin: ["http://localhost:3001", "https://batman-client.vercel.app"],
+      origin: ["http://localhost:3001", "https://batman.vercel.app", "https://devel-batman.vercel.app"],
       methods: ["GET", "POST"],
       allowedHeaders: ["Content-Type"],
       credentials: true
@@ -90,12 +90,23 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/register', registerUser);
 
+let isRequestPending = false;
+
 app.get("/products", async (req, res) => {
+  if (isRequestPending) {
+    // Если запрос уже выполняется, возвращаем ошибку или соответствующий ответ
+    return res.status(429).json({ error: "Previous request is still pending." });
+  }
+
+  isRequestPending = true;
+
   try {
     const filteredProducts = await db.collection("products").find({ category: req.query.subcategory }).toArray();
     res.status(200).json(filteredProducts);
   } catch (error) {
     handleError(res, "Something went wrong...");
+  } finally {
+    isRequestPending = false;
   }
 });
 app.get('/product/:productId', async (req, res) => {
