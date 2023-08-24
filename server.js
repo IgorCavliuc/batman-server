@@ -1,24 +1,178 @@
 const express = require("express");
+const axios = require('axios');
+const cheerio = require('cheerio');
 const bodyParser = require("body-parser");
-
-const { registerUser } = require('./controllers/authController');
-const jwt = require("jsonwebtoken");
-const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb');
-const saltRounds = 10;
+const bcrypt = require('bcrypt');
+const jwt = require("jsonwebtoken");
+
 const { connectToDb, getDb } = require("./db");
+const { registerUser } = require('./controllers/authController');
 const cors = require("cors");
 const cookieSession = require("cookie-session");
 
+const saltRounds = 10;
 const PORT = process.env.PORT || 3000;
 
 const app = express();
 app.use(express.json());
-
 app.use(bodyParser.json({ limit: "40mb" }));
 app.use(bodyParser.urlencoded({ limit: "40mb", extended: true }));
 
 let db;
+
+const baseUrl = 'https://999.md';
+
+
+
+const translations = {
+  'Tip ofertă': 'offer_type',
+  'Vând': 'selling',
+  'Marcă': 'brand',
+  'Modelul': 'model',
+  'Înmatriculare': 'registration',
+  'Stare': 'condition',
+  'Disponibilitate': 'availability',
+  'Autorul anunțului': 'advertiser',
+  'Anul fabricației': 'manufacturing_year',
+  'Volan': 'steering_wheel',
+  'Numărul de locuri': 'seats_number',
+  'Tip caroserie': 'body_type',
+  'Numărul de uși': 'doors_number',
+  'Kilometraj': 'mileage',
+  'Capacit. motor (cm³)': 'engine_capacity',
+  'Putere (CP)': 'power',
+  'Tip combustibil': 'fuel_type',
+  'Cutia de viteze': 'transmission',
+  'Tip tracțiune': 'drivetrain',
+  'Culoarea': 'color'
+};
+
+
+const createDetaleObject = (detaleArray) => {
+  const detaleObject = {};
+
+  for (let i = 0; i < detaleArray.length; i += 2) {
+    const key = translations[detaleArray[i].trim()] || detaleArray[i].trim();
+    const formattedKey = key.toLowerCase().replace(/\s+/g, '_');
+    const value = detaleArray[i + 1].trim();
+    detaleObject[formattedKey] = value;
+  }
+
+  return detaleObject;
+};
+
+const createPriceArray = (inputPriceArray) => {
+
+
+  const currencyMap = {
+    '€': 'eur',
+    '$': 'usd',
+    'lei': 'mdl'
+  };
+
+  const parts = inputPriceArray.split('≈');
+
+  const price = [];
+
+  for (const part of parts) {
+    const [valueStr, currencySymbol] = part.split(/([€$lei]+)/);
+    const value = valueStr.trim();
+    const currency = currencyMap[currencySymbol] || currencySymbol.trim();
+
+    if (value !== '') {
+      if (!price.some(item => item.value === value && item.currency === currency)) {
+        price.push({ value, currency });
+      }
+    }
+  }
+
+  return price
+  };
+
+const createRegionObject = (region) => {
+  const regionParts = region.split(',');
+  const countryAndCity = regionParts[0].replace("Regiunea:", "").trim();
+  const [country, city] = countryAndCity.split(/\s+/);
+
+  return {
+    country: country,
+    city: regionParts[1]?.trim()
+  };
+};
+
+const processCarPage = async (carLink) => {
+  try {
+    const response = await axios.get(carLink);
+    const $ = cheerio.load(response.data);
+
+    const title = $('.adPage__header h1').text().trim();
+    const images = $('.slick-cont-part-item img')
+        .map((index, element) => $(element).attr('src'))
+        .get().map(image => image.replace('320x240', '900x900'));;
+    const description = $('.adPage__content__description.grid_18').text().trim();
+    const detale = $('.m-value').text().trim();
+    const features = $('.adPage__content__features__col.grid_9.suffix_1 a')
+        .map((index, element) => $(element).text().trim())
+        .get();
+    const priceString = $('.adPage__content__price-feature__prices__price>span').text().trim();
+    const region = $('.adPage__content__region').text().trim();
+    const phoneNumber = $('.js-phone-number > dd > ul > li > a').attr('href').trim();
+
+    const detaleArray = detale.split(/\s{6,}/).filter(item => item.trim() !== '');
+    const detaleObject = createDetaleObject(detaleArray);
+    const price = createPriceArray(priceString);
+    const regionObj = createRegionObject(region);
+
+    const carData = {
+      title,
+      images,
+      description,
+      detaleObject,
+      features,
+      price,
+      regionObj,
+      phoneNumber,
+      subcategory: {
+        name: "technology",
+        code: "technology"
+      },
+      category: "technology"
+    };
+
+    console.log(carData);
+
+    const createdProduct = await db.collection("products").insertOne(carData);
+
+  } catch (error) {
+    console.error(`Error parsing car page: ${carLink}`);
+    console.error(error);
+  }
+};
+
+const processCarLinks = async () => {
+  try {
+    const response = await axios.get(`${baseUrl}/ru/list/phone-and-communication/mobile-phones`);
+    const $ = cheerio.load(response.data);
+
+    const carLinks = $('.ads-list-photo-item-thumb > a')
+        .map((index, element) => `${baseUrl}${$(element).attr('href')}`)
+        .get();
+
+    const processPromises = carLinks.map(processCarPage);
+    await Promise.all(processPromises);
+
+    console.log('All car data processed');
+
+  } catch (error) {
+    console.error('Error fetching car list page');
+    console.error(error);
+  }
+};
+
+// processCarLinks();
+
+
 
 app.use(
     cors({
@@ -47,6 +201,9 @@ connectToDb((err) => {
 const handleError = (res, error) => {
   res.status(500).json({ error });
 };
+
+
+
 
 app.get("/navigation", async (req, res) => {
   try {
